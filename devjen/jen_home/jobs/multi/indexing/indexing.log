@@ -1,0 +1,23 @@
+Started
+[Sun Jan 27 12:57:03 UTC 2019] Starting branch indexing...
+ > git --version # timeout=10
+ > git ls-remote --symref https://github.com/iamvijayaragavan/sample-java.git # timeout=10
+ > git rev-parse --is-inside-work-tree # timeout=10
+Setting origin to https://github.com/iamvijayaragavan/sample-java.git
+ > git config remote.origin.url https://github.com/iamvijayaragavan/sample-java.git # timeout=10
+Fetching & pruning origin...
+Fetching upstream changes from origin
+ > git --version # timeout=10
+ > git config --get remote.origin.url # timeout=10
+ > git fetch --tags --progress origin +refs/heads/*:refs/remotes/origin/* --prune
+Listing remote references...
+ > git config --get remote.origin.url # timeout=10
+ > git ls-remote -h https://github.com/iamvijayaragavan/sample-java.git # timeout=10
+Checking branches...
+  Checking branch master
+      ‘Jenkinsfile’ found
+    Met criteria
+Scheduled build for branch: master
+Processed 1 branches
+[Sun Jan 27 12:57:08 UTC 2019] Finished branch indexing. Indexing took 4.7 sec
+Finished: SUCCESS

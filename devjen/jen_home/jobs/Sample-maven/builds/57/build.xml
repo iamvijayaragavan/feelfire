@@ -1,0 +1,202 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-build plugin="workflow-job@2.31">
+  <actions>
+    <hudson.model.CauseAction>
+      <causeBag class="linked-hash-map">
+        <entry>
+          <hudson.model.Cause_-UserIdCause>
+            <userId>admin</userId>
+          </hudson.model.Cause_-UserIdCause>
+          <int>1</int>
+        </entry>
+      </causeBag>
+    </hudson.model.CauseAction>
+    <org.jenkinsci.plugins.workflow.libs.LibrariesAction plugin="workflow-cps-global-lib@2.12">
+      <libraries/>
+    </org.jenkinsci.plugins.workflow.libs.LibrariesAction>
+    <org.jenkinsci.plugins.workflow.cps.EnvActionImpl plugin="workflow-cps@2.62">
+      <env class="tree-map"/>
+    </org.jenkinsci.plugins.workflow.cps.EnvActionImpl>
+    <hudson.plugins.git.util.BuildData plugin="git@3.9.1">
+      <buildsByBranchName>
+        <entry>
+          <string>refs/remotes/origin/master</string>
+          <hudson.plugins.git.util.Build>
+            <marked plugin="git-client@2.7.6">
+              <sha1>7c2303b1f8570ea6571151ba57e848c3307d5903</sha1>
+              <branches class="list">
+                <hudson.plugins.git.Branch>
+                  <sha1 reference="../../../sha1"/>
+                  <name>refs/remotes/origin/master</name>
+                </hudson.plugins.git.Branch>
+              </branches>
+            </marked>
+            <revision reference="../marked"/>
+            <hudsonBuildNumber>57</hudsonBuildNumber>
+          </hudson.plugins.git.util.Build>
+        </entry>
+      </buildsByBranchName>
+      <lastBuild reference="../buildsByBranchName/entry/hudson.plugins.git.util.Build"/>
+      <remoteUrls>
+        <string>https://github.com/iamvijayaragavan/sample-java.git</string>
+      </remoteUrls>
+    </hudson.plugins.git.util.BuildData>
+    <hudson.plugins.git.GitTagAction plugin="git@3.9.1">
+      <tags class="hudson.util.CopyOnWriteMap$Tree">
+        <entry>
+          <string>refs/remotes/origin/master</string>
+          <list/>
+        </entry>
+      </tags>
+      <ws>/var/jenkins_home/workspace/Sample-maven</ws>
+    </hudson.plugins.git.GitTagAction>
+    <org.jenkinsci.plugins.workflow.steps.scm.MultiSCMRevisionState plugin="workflow-scm-step@2.7">
+      <revisionStates>
+        <entry>
+          <string>git https://github.com/iamvijayaragavan/sample-java.git</string>
+          <hudson.scm.SCMRevisionState_-None/>
+        </entry>
+      </revisionStates>
+    </org.jenkinsci.plugins.workflow.steps.scm.MultiSCMRevisionState>
+  </actions>
+  <queueId>131</queueId>
+  <timestamp>1548638120795</timestamp>
+  <startTime>1548638120797</startTime>
+  <result>SUCCESS</result>
+  <duration>15177</duration>
+  <charset>UTF-8</charset>
+  <keepLog>false</keepLog>
+  <execution class="org.jenkinsci.plugins.workflow.cps.CpsFlowExecution">
+    <result>SUCCESS</result>
+    <script>#!/usr/bin/env groovy
+
+import hudson.model.*
+import hudson.EnvVars
+import groovy.json.JsonSlurperClassic
+import groovy.json.JsonBuilder
+import groovy.json.JsonOutput
+import java.net.URL
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
+ 
+try {
+node {
+ stage(&apos;Pre-Requirestion&apos;){
+  properties([[$class: &apos;BuildDiscarderProperty&apos;,strategy: [$class: &apos;LogRotator&apos;, numToKeepStr: &apos;5&apos;]],disableConcurrentBuilds(),])
+  echo(&quot;All environments=${env}&quot;)
+  echo(&quot;\u2600 BUILD_URL=${env.BUILD_URL}&quot;)
+  def workspace = pwd()
+  echo(&quot;\u2600 workspace=${workspace}&quot;)
+  mailnotification = &quot;iamvj@gmail.com&quot;
+  javaversion = &apos;JDK-1.8&apos;
+  echo(&quot;\u2600 Java version=${javaversion}&quot;)
+  branchname = &quot;${env.BRANCH_NAME}&quot;
+  echo(&quot;\u2600 Branch Name=${branchname}&quot;)
+  sh (&quot;git config --global user.email &apos;some@email.com&apos;&quot;)
+  sh (&quot;git config --global user.name &apos;jenkins&apos;&quot;)
+  def url = sh(returnStdout: true, script: &apos;git config remote.origin.url&apos;).trim()
+  echo(&quot;url = ${url}&quot;)
+  def mvnHome = tool &apos;M3&apos;
+  def javahome = tool &apos;openjdk&apos;
+ }
+ stage(&apos;Checkout&apos;){
+  echo &quot;Git Checkout&quot;
+  checkout scm
+ }
+ stage(&apos;Build&apos;){
+  sh(&quot;${mvnHome}/bin/mvn -B -Dmaven.test.failure.ignore verify&quot;)
+  }
+ stage(&apos;SonarQube Ananlyis&apos;){
+  echo &quot;Hi Sonar&quot;
+  withSonarQubeEnv(&apos;sonar&apos;){
+   sh(&quot;${mvnHome}/bin/mvn sonar:sonar&quot;)
+  }
+ }
+ stage(&apos;Docker Build&apos;){
+  echo &quot;Hello docker&quot;
+ }
+ stage(&apos;Publish Image&apos;){
+  echo &quot;Welclome Hub&quot;
+ }
+} // node
+ 
+} // try end
+catch (exc) {
+/*
+ err = caughtError
+ currentBuild.result = &quot;FAILURE&quot;
+ String recipient = &apos;infra@lists.jenkins-ci.org&apos;
+ mail subject: &quot;${env.JOB_NAME} (${env.BUILD_NUMBER}) failed&quot;,
+         body: &quot;It appears that ${env.BUILD_URL} is failing, somebody should do something about that&quot;,
+           to: recipient,
+      replyTo: recipient,
+ from: &apos;noreply@ci.jenkins.io&apos;
+*/
+} finally {
+  
+ (currentBuild.result != &quot;ABORTED&quot;) &amp;&amp; node(&quot;master&quot;) {
+     // Send e-mail notifications for failed or unstable builds.
+     // currentBuild.result must be non-null for this step to work.
+     //step([$class: &apos;Mailer&apos;,
+     //   notifyEveryUnstableBuild: true,
+     //   recipients: &quot;${email_to}&quot;,
+     //   sendToIndividuals: true])
+ }
+}
+</script>
+    <loadedScripts class="map"/>
+    <durabilityHint>MAX_SURVIVABILITY</durabilityHint>
+    <timings class="map">
+      <entry>
+        <string>flowNode</string>
+        <long>915496787</long>
+      </entry>
+      <entry>
+        <string>classLoad</string>
+        <long>6710085079</long>
+      </entry>
+      <entry>
+        <string>run</string>
+        <long>4318768401</long>
+      </entry>
+      <entry>
+        <string>parse</string>
+        <long>4286731948</long>
+      </entry>
+      <entry>
+        <string>saveProgram</string>
+        <long>1142425345</long>
+      </entry>
+    </timings>
+    <sandbox>true</sandbox>
+    <iota>38</iota>
+    <head>1:38</head>
+    <done>true</done>
+    <resumeBlocked>false</resumeBlocked>
+  </execution>
+  <completed>true</completed>
+  <checkouts class="hudson.util.PersistedList">
+    <org.jenkinsci.plugins.workflow.job.WorkflowRun_-SCMCheckout>
+      <scm class="hudson.plugins.git.GitSCM" plugin="git@3.9.1">
+        <configVersion>2</configVersion>
+        <userRemoteConfigs>
+          <hudson.plugins.git.UserRemoteConfig>
+            <url>https://github.com/iamvijayaragavan/sample-java.git</url>
+          </hudson.plugins.git.UserRemoteConfig>
+        </userRemoteConfigs>
+        <branches>
+          <hudson.plugins.git.BranchSpec>
+            <name>*/master</name>
+          </hudson.plugins.git.BranchSpec>
+        </branches>
+        <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+        <submoduleCfg class="list"/>
+        <extensions/>
+      </scm>
+      <node></node>
+      <workspace>/var/jenkins_home/workspace/Sample-maven</workspace>
+      <changelogFile>/var/jenkins_home/jobs/Sample-maven/builds/57/changelog0.xml</changelogFile>
+      <pollingBaseline class="hudson.scm.SCMRevisionState$None" reference="../../../actions/org.jenkinsci.plugins.workflow.steps.scm.MultiSCMRevisionState/revisionStates/entry/hudson.scm.SCMRevisionState_-None"/>
+    </org.jenkinsci.plugins.workflow.job.WorkflowRun_-SCMCheckout>
+  </checkouts>
+</flow-build>
